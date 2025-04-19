@@ -83,45 +83,129 @@ appVersion: "1.0.4"
 
 ### 2‑2. values.yaml
 ```yaml
-# デプロイメント設定
+# Default values for nodejs-api.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
   repository: 986154984217.dkr.ecr.ap-northeast-1.amazonaws.com/container-nodejs-api-8000
-  tag: v1.0.4
+  # This sets the pull policy for images.
   pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: v1.0.4
 
-# サービス設定
-service:
-  type: NodePort
-  port: 8000
-  nodePort: 30080
-
-# 基本設定
+# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
 
-# ServiceAccount設定（無効化）
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
-  create: false
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
   annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-# Ingress設定（無効化）
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: NodePort
+  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 8000
+  nodePort: 30080
+
+# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
   enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
 
-# HPA設定（無効化）
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
   enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
 
-# リソース制限（必要に応じて設定）
-resources: {}
+# Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
 
-# その他の設定
-podAnnotations: {}
-podSecurityContext: {}
-securityContext: {}
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
 nodeSelector: {}
+
 tolerations: []
+
 affinity: {}
 ```
 
@@ -151,21 +235,6 @@ spec:
               value: "kind"
 ```
 
-### 2‑4. service.yaml
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: nodejs-api
-  labels: { app: nodejs-api }
-spec:
-  type: {{ .Values.service.type }}
-  selector: { app: nodejs-api }
-  ports:
-    - port: {{ .Values.service.port }}
-      targetPort: 8000
-      nodePort: {{ .Values.service.nodePort }}
-```
 
 ---
 
@@ -186,7 +255,11 @@ kind load docker-image 986154984217.dkr.ecr.ap-northeast-1.amazonaws.com/contain
 ## 4. Helm デプロイ
 
 ```bash
-helm install api charts/nodejs-api --namespace default
+# nodejs-apiディレクトリ内で実行する場合
+helm install api . --namespace default
+
+# または、プロジェクトルートディレクトリで実行する場合
+helm install api nodejs-api --namespace default
 ```
 
 ---
@@ -196,17 +269,25 @@ helm install api charts/nodejs-api --namespace default
 ```bash
 kubectl get pods,svc
 
+# ポートフォワードの設定（必須）
+kubectl port-forward svc/api-nodejs-api 8000:8000 -n default &
+
 # Web ブラウザ
 open http://localhost:8000/        # ヘルスチェック
 open http://localhost:8000/api-docs  # Swagger UI
 ```
+
+> **注意:** アプリケーションにアクセスするには、必ずポートフォワードの設定が必要です。ポートフォワードが設定されていない場合、`localhost:8000` にアクセスできません。
 
 ---
 
 ## 6. クリーンアップ
 
 ```bash
+# Helm リリースの削除
 helm uninstall api
+
+# クラスタの削除
 kind delete cluster --name basic
 ```
 
