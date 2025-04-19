@@ -209,32 +209,6 @@ tolerations: []
 affinity: {}
 ```
 
-### 2‑3. deployment.yaml
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{ include "nodejs-api.fullname" . }}
-  labels: { app: nodejs-api }
-spec:
-  replicas: 1
-  selector:
-    matchLabels: { app: nodejs-api }
-  template:
-    metadata:
-      labels: { app: nodejs-api }
-    spec:
-      containers:
-        - name: api
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - containerPort: 8000
-          env:
-            - name: CURRENT_ENV
-              value: "kind"
-```
-
 
 ---
 
