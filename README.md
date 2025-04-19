@@ -253,15 +253,6 @@ curl http://localhost:8000/posts
 
 ---
 
-
-```
-使用中のポートを確認する
-sudo lsof -i :8000
-
-# 強制終了が必要な場合
-sudo kill -9 <PID>
-```
-
 ## 6. クリーンアップ
 
 ```bash
@@ -270,6 +261,48 @@ helm uninstall api
 
 # クラスタの削除
 kind delete cluster --name basic
+```
+
+---
+
+## 7. Makefile による簡易操作
+
+このプロジェクトには、操作を簡略化するための Makefile が含まれています。以下のコマンドで利用できます：
+
+```bash
+# ヘルプの表示
+make help
+
+# クラスタの作成
+make cluster-create
+
+# クラスタの状態確認
+make cluster-status
+
+# アプリケーションのデプロイ
+make deploy
+
+# ポートフォワードの設定
+make port-forward
+
+# アプリケーションの動作確認
+make test
+
+# すべてのリソースのクリーンアップ
+make cleanup
+```
+
+### 便利なコマンド
+
+```bash
+# ポート使用状況の確認
+make port-check
+
+# ポートを使用しているプロセスの強制終了
+make port-kill
+
+# ポートフォワードの停止
+make port-forward-stop
 ```
 
 ---
