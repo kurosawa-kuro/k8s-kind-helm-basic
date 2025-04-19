@@ -236,10 +236,7 @@ kind load docker-image 986154984217.dkr.ecr.ap-northeast-1.amazonaws.com/contain
 ## 4. Helm デプロイ
 
 ```bash
-# nodejs-apiディレクトリ内で実行する場合
-helm install api . --namespace default
-
-# または、プロジェクトルートディレクトリで実行する場合
+# プロジェクトルートディレクトリで実行する場合
 helm install api nodejs-api --namespace default
 ```
 
@@ -254,8 +251,9 @@ kubectl get pods,svc
 kubectl port-forward svc/api-nodejs-api 8000:8000 -n default &
 
 # Web ブラウザ
-open http://localhost:8000/        # ヘルスチェック
-open http://localhost:8000/api-docs  # Swagger UI
+curl http://localhost:8000
+curl http://localhost:8000/healthz
+curl http://localhost:8000/posts
 ```
 
 > **注意:** アプリケーションにアクセスするには、必ずポートフォワードの設定が必要です。ポートフォワードが設定されていない場合、`localhost:8000` にアクセスできません。
