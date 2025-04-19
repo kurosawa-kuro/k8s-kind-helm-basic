@@ -33,6 +33,13 @@ cd k8s-kind-helm-basic
 
 ## 1. kind クラスタ作成
 
+事前にkindクラスタの状況確認
+
+```
+kind get clusters
+kind delete cluster --name basic
+```
+
 `kind-config.yaml`（NodePort: **30080 → localhost:8000** にマッピング）
 
 ```yaml
