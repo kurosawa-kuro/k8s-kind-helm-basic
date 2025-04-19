@@ -1,6 +1,6 @@
 # k8s-kind-helm-basic チュートリアル
 
-> **目的:** kind クラスタ上に **Helm だけ** を使って Node.js API コンテナをデプロイし、ローカル `http://localhost:8000` でアクセスできるようにする最小構成。Ingress / Prometheus / Grafana / Argo CD / Kustomize などは一切使用しません。
+> **目的:** kind クラスタ上に **Helm だけ** を使って Node.js API コンテナをデプロイし、ローカル `http://localhost:8000` でアクセスできるようにする最小構成。Ingress / Prometheus / Grafana / Argo CD / Kustomize などは一切使用しません。
 
 ---
 
@@ -8,7 +8,7 @@
 
 | 項目 | バージョン例 |
 |------|--------------|
-| OS   | Ubuntu 22.04 / Amazon Linux 2023 |
+| OS   | Ubuntu 22.04 / Amazon Linux 2023 |
 | kind | v0.23.0 |
 | kubectl | v1.29.x |
 | Helm | v3.14.x |
@@ -54,14 +54,23 @@ kubectl cluster-info --context kind-basic
 
 ## 2. Helm チャート構成
 
+```bash
+# Helm チャートの作成
+helm create nodejs-api
 ```
-charts/
-└─ nodejs-api/
-   ├─ Chart.yaml
-   ├─ values.yaml
-   └─ templates/
-        ├─ deployment.yaml
-        └─ service.yaml
+
+チャートの構成：
+```
+nodejs-api/
+├─ Chart.yaml
+├─ values.yaml
+└─ templates/
+     ├─ deployment.yaml
+     ├─ service.yaml
+     ├─ ingress.yaml
+     ├─ hpa.yaml
+     ├─ serviceaccount.yaml
+     └─ NOTES.txt
 ```
 
 ### 2‑1. Chart.yaml
@@ -74,15 +83,46 @@ appVersion: "1.0.4"
 
 ### 2‑2. values.yaml
 ```yaml
+# デプロイメント設定
 image:
   repository: 986154984217.dkr.ecr.ap-northeast-1.amazonaws.com/container-nodejs-api-8000
   tag: v1.0.4
   pullPolicy: IfNotPresent
+
+# サービス設定
 service:
   type: NodePort
   port: 8000
   nodePort: 30080
+
+# 基本設定
+nameOverride: ""
+fullnameOverride: ""
+
+# ServiceAccount設定（無効化）
+serviceAccount:
+  create: false
+  annotations: {}
+  name: ""
+
+# Ingress設定（無効化）
+ingress:
+  enabled: false
+
+# HPA設定（無効化）
+autoscaling:
+  enabled: false
+
+# リソース制限（必要に応じて設定）
 resources: {}
+
+# その他の設定
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
 ```
 
 ### 2‑3. deployment.yaml
