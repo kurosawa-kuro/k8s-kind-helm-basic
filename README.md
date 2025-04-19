@@ -80,15 +80,8 @@ nodejs-api/
      └─ NOTES.txt
 ```
 
-### 2‑1. Chart.yaml
-```yaml
-apiVersion: v2
-name: nodejs-api
-version: 0.1.0
-appVersion: "1.0.4"
-```
 
-### 2‑2. values.yaml
+### 2. values.yaml
 ```yaml
 # Default values for nodejs-api.
 # This is a YAML-formatted file.
@@ -259,6 +252,15 @@ curl http://localhost:8000/posts
 > **注意:** アプリケーションにアクセスするには、必ずポートフォワードの設定が必要です。ポートフォワードが設定されていない場合、`localhost:8000` にアクセスできません。
 
 ---
+
+
+```
+使用中のポートを確認する
+sudo lsof -i :8000
+
+# 強制終了が必要な場合
+sudo kill -9 <PID>
+```
 
 ## 6. クリーンアップ
 
